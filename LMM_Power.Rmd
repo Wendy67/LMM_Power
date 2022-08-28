@@ -23,18 +23,18 @@ subj_n <- 10   # 总被试量
 trial_n <- 5  # 每种刺激呈现的次数 *4 一个被试总的trials是20次
 
 # 固定效应
-b0 <- 20     # 截距 (所有条件的均值)
+b0 <- 200     # 截距 (所有条件的均值)
 b1 <- 56      # 听觉模式的固定效应
 b2 <- 92      # 背景噪音的固定效应
 b3 <- -10     # 听觉模式与背景噪音的交互作用
 
 # 随机效应
 u0s <- 34    # 被试的随机截距
-u1s <- 20  # 被试的听觉模式随机斜率 
-#u2s <- 10     # 被试的背景噪音模式随机斜率 
+u1s <- 200  # 被试的听觉模式随机斜率 
+u2s <- 10     # 被试的背景噪音模式随机斜率 
 
 # 误差项
-sigma <- 2
+sigma <- 70
 ```
 
 ```{r}
@@ -50,13 +50,14 @@ df_simu <- add_random(subj = subj_n) %>%
   add_contrast("SNR", "treatment",colnames = "SNR_code") %>% 
   # 添加基于被试的随机截距和斜率
   add_ranef("subj", u0s = u0s, u1s =u1s , .cors=0.5) %>% 
+  add_ranef("subj", u0s = u0s, u2s =u2s , .cors=0.5) %>%
   # 添加观察值的误差项
   add_ranef(sigma = sigma) %>% 
   # 最后根据设置的固定效应和随机效应参数值，生成因变量。
   mutate(RT = (b0+u0s) +         # 截距
            (b1+u1s) * modality_code + # 视听模式的斜率
-            b2 * SNR_code +      # 背景噪音的斜率
-            b3 * modality_code * SNR_code +   # 交互作用
+           (b2+u2s) * SNR_code +      # 背景噪音的斜率
+            b3 * modality_code * SNR_code +   
            sigma)         #误差项  
 
 head(df_simu,10) #查看生成的数据矩阵
@@ -83,7 +84,7 @@ df_simu$subj<-as.numeric(str_sub(df_simu$subj,2,3))
 
 ## 模型
 model_1<- lmer(RT ~ 1 + modality * SNR +
-                 (1 + modality |subj), 
+                 (1 + modality + SNR|subj), 
                   data = df_simu)
 summary(model_1)
 ```
