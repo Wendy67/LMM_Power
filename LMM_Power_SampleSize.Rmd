@@ -1,0 +1,25 @@
+---
+title: "LMM_power_SampleSize"
+output: html_document
+date: '2022-08-28'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+在我们研究中，我们如何从前人研究中效应模型中计算出我们所需要的研究的样本量。以Brown的研究为例，
+
+```{r }
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
