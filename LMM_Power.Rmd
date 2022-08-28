@@ -20,7 +20,7 @@ set.seed(2022)
 
 ```{r pressure, echo=FALSE}
 subj_n <- 10   # 总被试量
-trial_n <- 15  # 5 10 15 每种刺激呈现的次数*4 一个被试总的20 40 60 (trials是 4*trial_n 次)
+trial_n <- 5  # 5 10 15 每种刺激呈现的次数*4 一个被试总的20 40 60 (trials是 4*trial_n 次)
 
 # 固定效应
 b0 <- 200     # 截距 (所有条件的均值)
