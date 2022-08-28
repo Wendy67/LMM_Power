@@ -23,7 +23,7 @@ subj_n <- 10   # 总被试量
 trial_n <- 5  # 每种刺激呈现的次数 *4 一个被试总的trials是20次
 
 # 固定效应
-b0 <- 700      # 截距 (所有条件的均值)
+b0 <- 20     # 截距 (所有条件的均值)
 b1 <- 56      # 听觉模式的固定效应
 b2 <- 92      # 背景噪音的固定效应
 b3 <- -10     # 听觉模式与背景噪音的交互作用
@@ -31,7 +31,7 @@ b3 <- -10     # 听觉模式与背景噪音的交互作用
 # 随机效应
 u0s <- 34    # 被试的随机截距
 u1s <- 20  # 被试的听觉模式随机斜率 
-u2s <- 10     # 被试的背景噪音模式随机斜率 
+#u2s <- 10     # 被试的背景噪音模式随机斜率 
 
 # 误差项
 sigma <- 2
@@ -39,7 +39,7 @@ sigma <- 2
 
 ```{r}
 #生成假定实验的条件的数据矩阵
-df_simu <- add_random(subj = subj_n, stim = stim) %>%
+df_simu <- add_random(subj = subj_n) %>%
   # 添加听觉模式类型的信息（被试内）
   add_within("subj", modality = c("Audio-only","Audiovisual"), SNR = c("Easy","Hard")) %>%
   # 每种刺激会呈现10次
@@ -50,13 +50,12 @@ df_simu <- add_random(subj = subj_n, stim = stim) %>%
   add_contrast("SNR", "treatment",colnames = "SNR_code") %>% 
   # 添加基于被试的随机截距和斜率
   add_ranef("subj", u0s = u0s, u1s =u1s , .cors=0.5) %>% 
-  add_ranef("subj", u0s = u0s, u2s =u2s , .cors=0.5) %>% 
   # 添加观察值的误差项
   add_ranef(sigma = sigma) %>% 
   # 最后根据设置的固定效应和随机效应参数值，生成因变量。
-  mutate(RT = (b0+u0s+u3s) +         # 截距
+  mutate(RT = (b0+u0s) +         # 截距
            (b1+u1s) * modality_code + # 视听模式的斜率
-           (b2+u2s) * SNR_code +      # 背景噪音的斜率
+            b2 * SNR_code +      # 背景噪音的斜率
             b3 * modality_code * SNR_code +   # 交互作用
            sigma)         #误差项  
 
@@ -84,7 +83,7 @@ df_simu$subj<-as.numeric(str_sub(df_simu$subj,2,3))
 
 ## 模型
 model_1<- lmer(RT ~ 1 + modality * SNR +
-                 (1 + modality + SNR|subj), 
+                 (1 + modality |subj), 
                   data = df_simu)
 summary(model_1)
 ```
@@ -109,10 +108,10 @@ model <- model_1 # which model do we want to simulate power for?
 data <- df_simu # data used to fit the model
 fixed_effects <- c("modality", "SNR") # all fixed effects specified in model
 simvar <- "subj" # which random effect do we want to vary in the simulation?
-steps <- c(20,30,40) # which sample sizes do we want to look at?
+steps <- c(15,20,25) # which sample sizes do we want to look at?
 critical_value <- 2 # which t/z value do we want to use to test for significance?
 n_sim <- 1000 # how many single simulations should be used to estimate power?
-SESOI <- c(3.66, 0.75, -0.065, 0.09) # specify SESOI
+SESOI <- c(38, 63, 92, -10) # specify SESOI
 
 model_2_power <- mixedpower(model = model, data = data,
                         fixed_effects = fixed_effects,

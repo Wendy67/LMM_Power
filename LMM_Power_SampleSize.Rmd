@@ -13,9 +13,12 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 # active the required packages 
-library(rio)
-library(lme4)
-library(mixedpower)
+if (!require(tidyverse)) {library(tidyverse)}
+if (!require(mixedpower)) {library(mixedpower)}
+if (!require(lme4)) {library(lme4)}
+if (!require(bruceR)) {library(bruceR)}
+if (!require(pbkrtest)) {library(pbkrtest)}
+
 
 # 数据载入 the brown data 
 set.wd()#设置数据当前的路径
@@ -27,10 +30,13 @@ rt_data$modality <- ifelse(rt_data$modality ==
 class(rt_data$modality)  #modality已经变成0与1的虚拟编码
 
 ###建立一个模型 
-fit_model<- lmer(RT ~ 1 + modality + SNR + (1 + modality + SNR |PID), data = rt_data)
+fit_model<- lmer(RT ~ 1 + modality * SNR + (1 + modality + SNR |PID),
+                 data = rt_data)
 
 summary(fit_model)
+```
 
+```{r}
 ##计算power
 
 model <- fit_model #define the model from brown as used above
@@ -43,14 +49,27 @@ steps <- c(40,50) # the sample size at each step
 critical_value <- 2 #what the critical value 
 n_sim <- 1000 # number of simulation 
 power_fit<- mixedpower(model = fit_model, data = rt_data,
-                        fixevs_effects = fixed_effects,
+                        fixed_effects = fixed_effects,
                         simvar = simvar, steps = steps,
                         critical_value = 2, n_sim = 1000)# run power analysis 
 power_fit #print the power analysis results 
 ```
 
 ```{r pressure, echo=FALSE}
-plot(pressure)
-```
+##计算power
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+model <- fit_model #define the model from brown as used above
+data <-  rt_data  # define the date from brown as used above
+fixed_effects <- c("modality",'SNR')# select what fixed effect to analysis for power 
+simvar <- "PID" # select what random effect to analysis for power 
+
+### set preparemeters for the power analysis 
+steps <- c(40,50) # the sample size at each step
+critical_value <- 2 #what the critical value 
+n_sim <- 1000 # number of simulation 
+power_fit<- mixedpower(model = fit_model, data = rt_data,
+                        fixed_effects = fixed_effects,
+                        simvar = simvar, steps = steps,
+                        critical_value = 2, n_sim = 1000)# run power analysis 
+power_fit #print the power analysis results 
+```
