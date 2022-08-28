@@ -10,41 +10,31 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ```{r cars}
-library(tidyverse) # for data wrangling, pipes, and good dataviz
-library(lmerTest)  # for mixed effect models
-library(GGally)    # makes it easy to plot relationships between variables
-# devtools::install_github("debruine/faux")
-library(faux)      # for simulating correlated variables
-if (!require("devtools")) {
-    install.packages("devtools", dependencies = TRUE)}
-devtools::install_github("DejanDraschkow/mixedpower") # mixedpower is hosted on GitHub
-library(mixedpower)
+if (!require(tidyverse)) {library(tidyverse)}
+if (!require(faux)) {library(faux)}
+if (!require(mixedpower)) {library(mixedpower)}
 set.seed(2022)
 ```
 
-假设我们进行一个语音感知研究，自变量是听觉模式（modality）以及背景噪音（SNR），听觉模式有两个水平：纯音频条件（Audio-only）、视听条件（Audiovisual）；背景噪音有简单（Easy）、困难（Hard）两个水平。因变量是反应时和准确率（0：正确，1：错误）。我们使用`library(faux)`进行模拟实验数据的生成。
+假设我们进行一个语音感知研究，自变量是听觉模式（modality）以及背景噪音（SNR），听觉模式有两个水平：纯音频条件（Audio-only）、视听条件（Audiovisual）；背景噪音有简单（Easy）、困难（Hard）两个水平。因变量是反应时。我们使用`library(faux)`进行模拟实验数据的生成。
 
 ```{r pressure, echo=FALSE}
 subj_n <- 10   # 总被试量
-stim <-  2  #
-trial_n <- 5  # 每种刺激呈现的次数
+trial_n <- 5  # 每种刺激呈现的次数 *4 一个被试总的trials是20次
 
 # 固定效应
-b0 <- 998      # 截距 (所有条件的均值)
-b1 <- 98      # 听觉模式的固定效应
+b0 <- 700      # 截距 (所有条件的均值)
+b1 <- 56      # 听觉模式的固定效应
 b2 <- 92      # 背景噪音的固定效应
-b3 <- -29     # 听觉模式与背景噪音的交互作用
+b3 <- -10     # 听觉模式与背景噪音的交互作用
 
 # 随机效应
-u0s <- 269    # 被试的随机截距
-u1s <- 47.95  # 被试的听觉模式随机斜率 
-u2s <- 67     # 被试的背景噪音模式随机斜率 
-u3s <- 220    # 刺激的随机截距
-u4s <- 56    # 刺激的听觉模式随机斜率 
-u5s <- 60    #刺激的背景噪音模式随机斜率
+u0s <- 34    # 被试的随机截距
+u1s <- 20  # 被试的听觉模式随机斜率 
+u2s <- 10     # 被试的背景噪音模式随机斜率 
 
 # 误差项
-sigma <- 4
+sigma <- 2
 ```
 
 ```{r}
@@ -90,8 +80,7 @@ df_simu$SNR <- ifelse(
     df_simu$SNR == "Easy", 0, 1)
 library(stringr)
 df_simu$subj<-as.numeric(str_sub(df_simu$subj,2,3))
-df_simu$stim<-as.numeric(str_sub(df_simu$stim,2,3))
-
+#df_simu$stim<-as.numeric(str_sub(df_simu$stim,2,3))
 
 ## 模型
 model_1<- lmer(RT ~ 1 + modality * SNR +
@@ -103,9 +92,9 @@ summary(model_1)
 ```{r power analysis}
 model <- model_1 # which model do we want to simulate power for?
 data <- df_simu # data used to fit the model
-fixed_effects <- c("modality", "SNR") # all fixed effects specified in FLPmodel
+fixed_effects <- c("modality", "SNR") # all fixed effects specified in model
 simvar <- "subj" # which random effect do we want to vary in the simulation?
-steps <- 60 # which sample sizes do we want to look at?
+steps <- c(20,30,40) # which sample sizes do we want to look at?
 critical_value <- 2 # which t/z value do we want to use to test for significance?
 n_sim <- 1000 # how many single simulations should be used to estimate power?
 
@@ -115,12 +104,12 @@ model_1_power <- mixedpower(model = model, data = data,
                         critical_value = critical_value, n_sim = n_sim)
 model_1_power 
 ```
-```{r power analysis：SESOI}
+```{r power analysis SESOI}
 model <- model_1 # which model do we want to simulate power for?
 data <- df_simu # data used to fit the model
-fixed_effects <- c("modality", "SNR") # all fixed effects specified in FLPmodel
+fixed_effects <- c("modality", "SNR") # all fixed effects specified in model
 simvar <- "subj" # which random effect do we want to vary in the simulation?
-steps <- 60# which sample sizes do we want to look at?
+steps <- c(20,30,40) # which sample sizes do we want to look at?
 critical_value <- 2 # which t/z value do we want to use to test for significance?
 n_sim <- 1000 # how many single simulations should be used to estimate power?
 SESOI <- c(3.66, 0.75, -0.065, 0.09) # specify SESOI
@@ -132,3 +121,7 @@ model_2_power <- mixedpower(model = model, data = data,
                         SESOI = SESOI, databased = T)
 model_2_power 
 multiplotPower(model_2_power)
+```
+
+
+

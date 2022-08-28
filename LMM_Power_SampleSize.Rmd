@@ -8,15 +8,46 @@ date: '2022-08-28'
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-在我们研究中，我们如何从前人研究中效应模型中计算出我们所需要的研究的样本量。以Brown的研究为例，
+在我们研究中，我们如何从前人研究中效应模型中计算出我们所需要的研究的样本量。以Brown的研究为参考如何计算我们下一个实验的样本量。混合效应模型的功效分析的参考网址：https://jakewestfall.shinyapps.io/crossedpower/
 
-```{r }
 
+```{r}
+# active the required packages 
+library(rio)
+library(lme4)
+library(mixedpower)
+
+# 数据载入 the brown data 
+set.wd()#设置数据当前的路径
+rt_data=import("rt_dummy_data_interaction.csv") #56个被试
+
+#编码 prepare the data for modeling 
+rt_data$modality <- ifelse(rt_data$modality == 
+                             "Audio-only", 0, 1)
+class(rt_data$modality)  #modality已经变成0与1的虚拟编码
+
+###建立一个模型 
+fit_model<- lmer(RT ~ 1 + modality + SNR + (1 + modality + SNR |PID), data = rt_data)
+
+summary(fit_model)
+
+##计算power
+
+model <- fit_model #define the model from brown as used above
+data <-  rt_data  # define the date from brown as used above
+fixed_effects <- c("modality",'SNR')# select what fixed effect to analysis for power 
+simvar <- "PID" # select what random effect to analysis for power 
+
+### set preparemeters for the power analysis 
+steps <- c(40,50) # the sample size at each step
+critical_value <- 2 #what the critical value 
+n_sim <- 1000 # number of simulation 
+power_fit<- mixedpower(model = fit_model, data = rt_data,
+                        fixevs_effects = fixed_effects,
+                        simvar = simvar, steps = steps,
+                        critical_value = 2, n_sim = 1000)# run power analysis 
+power_fit #print the power analysis results 
 ```
-
-## Including Plots
-
-You can also embed plots, for example:
 
 ```{r pressure, echo=FALSE}
 plot(pressure)
