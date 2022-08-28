@@ -20,7 +20,7 @@ set.seed(2022)
 
 ```{r pressure, echo=FALSE}
 subj_n <- 10   # 总被试量
-trial_n <- 5  # 每种刺激呈现的次数 *4 一个被试总的trials是20次
+trial_n <- 15  # 5 10 15 每种刺激呈现的次数*4 一个被试总的20 40 60 (trials是 4*trial_n 次)
 
 # 固定效应
 b0 <- 200     # 截距 (所有条件的均值)
@@ -41,8 +41,8 @@ sigma <- 70
 #生成假定实验的条件的数据矩阵
 df_simu <- add_random(subj = subj_n) %>%
   # 添加听觉模式类型的信息（被试内）
-  add_within("subj", modality = c("Audio-only","Audiovisual"), SNR = c("Easy","Hard")) %>%
-  # 每种刺激会呈现10次
+  add_within("subj", modality = c("Audio-only","Audiovisual"), SNR = c("Easy","Hard")) %>%  #2*2 4
+  # 每种刺激会呈现5次
   add_random(trial = trial_n) %>%
   # 视听模式的编码：纯音频条件=0；视听条件=1
   add_contrast("modality", "treatment", colnames = "modality_code") %>%
@@ -65,7 +65,7 @@ head(df_simu,10) #查看生成的数据矩阵
 
 ```{r}
 df_simu <- df_simu %>% 
-  select(subj, stim, modality, SNR, RT) # 去除冗余的信息
+  select(subj, modality, SNR, RT) # 去除冗余的信息
 
 head(df_simu, 5)#查看数据结构
 ```
